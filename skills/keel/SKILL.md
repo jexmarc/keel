@@ -84,7 +84,7 @@ Read the leaf skill in full for any principle you apply. Each entry names when i
 
 ## Subagents
 
-Read `references/spawn.md` before the first spawn. Grok nesting depth is 1. **This session is the parent.** Every `spawn_subagent` call happens here. A `keel-agent` child cannot spawn. If a playbook says a child fans out internally, ignore that sentence and do the fan-out yourself.
+Read `references/spawn.md` before the first spawn. Read `references/scripts.md` before running `watch-pr`, `orch`, or `worktree-audit`. Those tools live in the plugin tree, not the user's project cwd. Grok nesting depth is 1. **This session is the parent.** Every `spawn_subagent` call happens here. A `keel-agent` child cannot spawn. If a playbook says a child fans out internally, ignore that sentence and do the fan-out yourself. `/no-comments` and the babysit loop stay in this session.
 
 **Use `subagent_type: "keel-agent"` for code-writing delegates and ad-hoc helpers.** `/keel` and `keel-agent` share the same style. Routed workflow skills (`how`, `why`, `interrogate`, `reflect`, `swarm`) set their own type; respect that, don't override to `keel-agent`.
 
@@ -133,8 +133,8 @@ A large or cross-cutting effort (a migration across many call sites, an ambitiou
 - **Shipping.** The half after Babysit. Independently verifying a green stack, then landing the contiguous verified run with Graphite merge-when-ready. `playbooks/shipping.md`.
 - **Autonomous run.** A long task to drive to completion without stopping ("run until done", "keep going until X"). `playbooks/autonomous-run.md`.
 - **Orchestrate.** A standing project handed to one coordinator chat: multi-day, many stacked PRs, dozens to hundreds of subagents, minimal human turns ("run this whole project", "own this migration until it lands"). Distinct from Autonomous run, which drives one task to a predicate; work one agent could finish inside the session's budget routes there, not here, however program-shaped the phrasing sounds. `playbooks/orchestrate.md`.
-- **Autopilot-full.** A queue of independent PRs run to merged with full autonomy: one owner per PR carries build through merge, and the root swarm-verifies each merge-ready head before its owner merges ("autopilot this queue", "full autopilot", one-owner-per-PR programs). `playbooks/autopilot-full.md`.
-- **Autopilot-stack.** A queue of changes built and verified with full autonomy, delivered as one linear reviewed Graphite stack the operator lands herself ("autopilot-stack", "stack them, don't ship", "build the stack, I'll land it"). `playbooks/autopilot-stack.md`.
+- **Autopilot-full.** A queue of independent PRs run to merged with full autonomy: one leaf owner per PR builds and opens the PR; this parent runs `/no-comments`, babysit, and swarm-verify before authorizing merge ("autopilot this queue", "full autopilot", one-owner-per-PR programs). `playbooks/autopilot-full.md`.
+- **Autopilot-stack.** A queue of changes built and verified with full autonomy, delivered as one linear reviewed Graphite stack the operator lands herself. Leaf owners build; the parent runs `/no-comments` and babysit ("autopilot-stack", "stack them, don't ship", "build the stack, I'll land it"). `playbooks/autopilot-stack.md`.
 - **Session pickup.** Resuming or taking over a prior agent's in-flight work from a transcript, Grok session, or pushed branch. `playbooks/session-pickup.md`.
 - **Pause safely.** Suspending in-flight work cleanly so it can be resumed, on an explicit pause, going offline, a Grok session restart, or imminent context compaction. The complement to Session pickup. Full steps: `playbooks/pause-safely.md`.
 - **Multi-phase or multi-PR plan.** Work that spans phases or stacked PRs. `playbooks/multi-phase-plan.md`.

@@ -39,7 +39,7 @@ It stays on for the conversation until you opt out.
 
 ## Grok-only facts
 
-**Models.** Keel uses `grok-4.6` (default, judgment) and `grok-4.5` (fast, mechanical). No Claude. No GPT. No Cursor slugs. Multi-model panels in pstack (interrogate, arena, how critics) become multi-effort and multi-persona Grok children. `/setup-keel` writes `~/.grok/keel.toml` or project `.grok/keel.toml`. It never writes `~/.cursor/rules/`.
+**Models.** Keel uses `grok-4.6` (default, judgment) and `grok-4.5` (fast, mechanical). No Claude. No GPT. No Cursor slugs. Multi-model panels in pstack (interrogate, arena, how critics) become multi-effort and multi-persona Grok children. `/setup-keel` writes `~/.grok/keel.toml` or project `.grok/keel.toml`, records `scripts_root`, and installs `~/.grok/bin` wrappers for the plugin scripts. It never writes `~/.cursor/rules/`.
 
 **Depth is 1.** A Grok subagent cannot spawn subagents. pstack playbooks that fanned out from a `poteto-agent` child will silently fail here if you leave them nested. The parent session running `/keel` owns every `spawn_subagent` call. `keel-agent` is a leaf. If a leaf needs more workers, it returns a `FANOUT` block and stops.
 

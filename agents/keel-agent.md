@@ -42,5 +42,6 @@ Only `grok-4.6` and `grok-4.5`. If the parent named a model, use it. Otherwise i
 
 - Call `spawn_subagent`
 - Substitute `general-purpose` for your own style when you are the worker. You already are keel-agent.
-- Babysit a PR the parent opened. Return the URL and stop.
+- Babysit a PR. Return the URL and head SHA and stop.
+- Run `/no-comments`. The parent spawns Comment Sicko.
 - Inline huge file dumps. Point at paths.

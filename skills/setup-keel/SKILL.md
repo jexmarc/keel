@@ -55,11 +55,18 @@ Every real slug must be `grok-4.6` or `grok-4.5`. `inherit-parent` and `auto` al
 
 ### 5. Write the files
 
+Resolve the installed plugin's scripts directory before writing. This skill lives at `skills/setup-keel/`. The tools live at sibling `skills/keel/scripts/`. Use that absolute path when it contains `worktree-audit.sh`. Otherwise run `skills/keel/scripts/resolve-scripts.sh` from the plugin tree.
+
+Write that path as `scripts_root` at the top of `keel.toml`. Then run `"$scripts_root/install-wrappers.sh"`. It writes `keel-watch-pr`, `keel-orch`, `keel-worktree-audit`, `keel-resolve-scripts`, and `keel-scripts` under `~/.grok/bin`. Tell the user to put `~/.grok/bin` on `PATH` if it is not already.
+
 `keel.toml`:
 
 ```toml
 # Keel per-role model and effort. Delete a key to fall back to the skill default.
 # Models: grok-4.6, grok-4.5, inherit-parent, auto.
+
+# Absolute path to this install's skills/keel/scripts. Playbooks resolve tools through it.
+scripts_root = "/absolute/path/to/skills/keel/scripts"
 
 [roles]
 "feature, refactoring" = { model = "grok-4.5" }
@@ -172,11 +179,12 @@ Also write a short always-on rule next to it so new sessions see the mapping.
 Read `~/.grok/keel.toml` or `.grok/keel.toml` before any `spawn_subagent` call.
 Use only `grok-4.6` and `grok-4.5`. The parent session owns every fan-out.
 Children do not spawn. See the keel skill `references/spawn.md`.
+Resolve harness tools through `scripts_root` or `~/.grok/bin` (`keel-watch-pr`, `keel-orch`, `keel-worktree-audit`). See the keel skill `references/scripts.md`.
 ```
 
 ### 6. Confirm
 
-Tell the user which files were written and that they apply to new sessions. Re-running this skill updates them.
+Tell the user which files were written, the `scripts_root` value, which wrappers landed in `~/.grok/bin`, and that the mapping applies to new sessions. Re-running this skill updates them.
 
 ### 7. Offer a verification skill
 

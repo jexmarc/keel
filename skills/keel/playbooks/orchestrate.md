@@ -14,7 +14,7 @@ Open a todolist with the steps below copied in verbatim. A step you skip stays l
 
 #### Roles and placement
 
-- **Coordinator (this chat).** This parent session. Frames, authors briefs, drains the inbox, owns the human report, makes judgment calls. It never authors or edits code: conflicted merges, restacks, and code changes are always tasks. Mechanically landing a verified unit (fast-forward or clean cherry-pick of a worker's commit, then push) is bookkeeping the coordinator may do itself on repos where local git is cheap; queueing finished work behind an idle stacker is how a deadline harvests nothing. The loop is agentic end to end. Agents are spawned, resumed, and drained only through `spawn_subagent` from this session. State reads and writes go through `scripts/orch/orch.ts` at drain points, one command in and one line out, to conserve context. The CLI never spawns, waits, or wakes anything.
+- **Coordinator (this chat).** This parent session. Frames, authors briefs, drains the inbox, owns the human report, makes judgment calls. It never authors or edits code: conflicted merges, restacks, and code changes are always tasks. Mechanically landing a verified unit (fast-forward or clean cherry-pick of a worker's commit, then push) is bookkeeping the coordinator may do itself on repos where local git is cheap; queueing finished work behind an idle stacker is how a deadline harvests nothing. The loop is agentic end to end. Agents are spawned, resumed, and drained only through `spawn_subagent` from this session. State reads and writes go through the orch CLI at drain points, one command in and one line out, to conserve context. Resolve it once per `../references/scripts.md` (`keel-orch` or `bun "$KEEL_SCRIPTS/orch/orch.ts"`). Never `bun scripts/orch/orch.ts` from the project cwd. The CLI never spawns, waits, or wakes anything.
 - **No sub-coordinators that spawn.** Grok nesting depth is 1. A child cannot spawn workers. If the program is too large for one drain, keep tracks as bookkeeping in the store and spawn workers yourself. A "sub-coordinator" child may author briefs and roll up reports, but it returns a `FANOUT` block for any spawn. The parent runs those calls.
 - **Worker / verifier.** Use `isolation: "worktree"` unless the task needs this machine: live UI/CLI verification you drive yourself; reading local transcripts; simulators and local IDE state; auth that exists only here. There is no Cursor cloud environment. Briefs inline what the worker needs or point at repo paths. Prefer fewer, broader workers; one writer per worktree or branch (principle-separate-before-serializing-shared-state). Run a unit's verifier on a different model or effort from its worker (`grok-4.6` vs `grok-4.5`).
 
@@ -22,7 +22,7 @@ Depth stays at coordinator then worker. Tracks are store labels, not nested spaw
 
 #### Store layout
 
-Create `orchestrate/<project-slug>/` in the current agent's store (path in the system prompt). Every file has exactly one writer; owners publish facts, readers aggregate at read time. Use `bun scripts/orch/orch.ts` for bookkeeping, written below as `orch`, while its canonical plain TSV and JSON stay readable without the CLI.
+Create `orchestrate/<project-slug>/` in the current agent's store (path in the system prompt). Every file has exactly one writer; owners publish facts, readers aggregate at read time. Use `keel-orch` or `bun "$KEEL_SCRIPTS/orch/orch.ts"` for bookkeeping, written below as `orch`, while its canonical plain TSV and JSON stay readable without the CLI.
 
 - `preferences.md` is the standing-orders register: numbered lines, one constraint each (model policy, stack shape and count, verification bar, forbidden paths, escalation policy). Paste it verbatim into every spawn and every resume; directives decay across resumes, and each dropped one costs a human turn. When you catch yourself restating an instruction, append the line before you act (principle-encode-lessons-in-structure).
 - `overview.md` is the durable PR and issue DB. Append; never rewrite wholesale per event.
@@ -43,7 +43,7 @@ SCOPE        paths this unit may write; paths it may not; its exclusive worktree
 CONTEXT      pointers to files and PRs; upstream reports pasted in full when this unit
              depends on them, because workers cannot see siblings
 ACCEPTANCE   checkable criteria, one per line
-VERIFY       exact commands or the control-skill path, plus known gotchas
+VERIFY       exact commands, or the project's verify-* skill, or /create-verification-skill if none exists, plus known gotchas
 TIMEBOX      rough cap on runtime; on expiry, return partial findings and stop rather than run on
 FORBIDDEN    no gt, no rebase, no force-push, no fixes outside scope, plus unit-specific bans
 REPORT       status, branch, head SHA, PRs, verdict, what you actually ran, deviations,
@@ -51,9 +51,9 @@ REPORT       status, branch, head SHA, PRs, verdict, what you actually ran, devi
 STANDING     <preferences.md pasted verbatim>
 ```
 
-Size the brief to the unit. A one-command unit gets the template collapsed to a paragraph that still names goal, scope, the verify command, and the report shape; a 4KB scaffold around a two-line edit costs more to write and obey than the edit. Local spawns may reference the standing-orders file by store path; verbatim paste is for cloud spawns and every resume.
+Size the brief to the unit. A one-command unit gets the template collapsed to a paragraph that still names goal, scope, the verify command, and the report shape; a 4KB scaffold around a two-line edit costs more to write and obey than the edit. Workers may reference the standing-orders file by store path when they can read it. Verbatim paste is for every resume and for any child that cannot see the store.
 
-A sub-coordinator brief adds its track boundary and unit list, its spawn budget with the cloud default and the local exception list, the drain protocol, and the rollup format (per child: name, status, PR, head SHA, verdict, one line; plus track status and frontier delta).
+A sub-coordinator brief adds its track boundary and unit list. It does not spawn. The parent runs every `FANOUT` it returns. Isolation is `worktree` unless the task needs this machine. The brief also names the drain protocol and the rollup format (per child: name, status, PR, head SHA, verdict, one line; plus track status and frontier delta).
 
 A dependency is a context relay, not just ordering: undeclared upstream context makes the worker guess. Missing fields are a refuse-to-spawn condition. Audit one sampled worker brief per sub-coordinator per wave, concurrently with the wave it samples, never as a gate in front of it; a failing brief stops that track and fixes the sub-coordinator's instructions, not just the worker, because brief quality decays late in a run. Never resume-chain a brief; respawn fresh with consolidated scope.
 
@@ -70,7 +70,7 @@ A dependency is a context relay, not just ordering: undeclared upstream context 
 #### Queue and drain
 
 - On a completion notification, run `orch inbox push <agent> <unit> <status> [--report PATH]` and return to what you were doing. Never deep-review inline; a completion that needs review becomes a verifier unit. Never review a diff inside a drain.
-- Drain in batches at four points: the end of a critical section, a track rollup, a frontier watcher wake (arm it via the loop skill, with a long heartbeat fallback), and before a human report. Begin each batch with `orch inbox drain`. Arrivals during a drain wait for the next one.
+- Drain in batches at four points: the end of a critical section, a track rollup, a frontier watcher wake, and before a human report. Arm the frontier watcher with Grok `monitor` on `keel-watch-pr` or `"$KEEL_SCRIPTS/watch-pr/watch-pr"`, or a background child that returns on the event, with a long heartbeat fallback. There is no Cursor `/loop`. Begin each batch with `orch inbox drain`. Arrivals during a drain wait for the next one.
 - Critical sections you finish first: authoring a brief, a stack operation, a conflict decision, writing a gate, updating ledger or frontier.
 - Each drain classifies every pointer (landed, needs-verify, failed, zombie, noise), writes the resulting rows through `orch unit add`, `orch unit set`, and `orch ledger record`, runs `orch status`, then spawns the next wave in one message.
 - Account for every spawned child at its track's rollup: arrived, respawned, or its scope explicitly absorbed. Silently redoing a missing child's work hides both the wasted spend and the coverage gap its result existed to close.
@@ -79,7 +79,7 @@ A dependency is a context relay, not just ordering: undeclared upstream context 
 #### Stack safety
 
 - The frontier is a computed object, never narrative. Recompute `frontier.json` from `gt` after every merge and stack mutation because GitHub base refs drift mid-restack while gt tracking is authoritative: ordered PR list, branch names, head SHAs, a generation number, the lowest unmerged PR. Resolve it where gt knows the stack, normally the stacker's clone; a checkout whose gt metadata never saw the submits reports no PRs and the command errors rather than guessing.
-- Exactly one stacker per stack may run `gt`, serialized within its stack; record the holder in the standing orders. Restacks run in cloud; a local restack at this scale takes the laptop down.
+- Exactly one stacker per stack may run `gt`, serialized within its stack; record the holder in the standing orders. Restacks run in an isolated worktree (`isolation: worktree`). Do not restack in the coordinator checkout. There is no Cursor cloud.
 - Workers never rebase and never run `gt`. Babysitters follow `playbooks/babysit.md`, one per stack, scoped to one immutable frontier generation; they report conflicts to the stacker rather than restacking.
 - PR closes and retargets go through the stacker only; closing a base PR orphans every chain above it. Merges and stack surgery are units with briefs like any other.
 - One retro watcher follows merged PRs for reverts, post-merge CI breaks, and orphaned follow-ups.

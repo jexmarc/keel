@@ -58,13 +58,13 @@ Before the skill hands back its summary, it spawns a reviewer on a different eff
 
 The contract above drives one task to one finish condition. Some nights hold more, a queue of independent changes or a whole program. Three playbooks scale the same trust up.
 
-[Autopilot-full](../../skills/keel/playbooks/autopilot-full.md) runs a queue of independent PRs to merged. Each PR gets one owner agent that carries it from build through merge, and no owner merges on its own verdict. A swarm of fresh verifiers checks every merge-ready head, and only a clean verdict authorizes the merge:
+[Autopilot-full](../../skills/keel/playbooks/autopilot-full.md) runs a queue of independent PRs to merged. Each PR gets one leaf owner that builds and opens the PR. This parent runs `/no-comments` and babysit, then a swarm of fresh verifiers checks every merge-ready head. Only a clean verdict authorizes the merge:
 
 ```text
 /keel full autopilot on this queue. each item is independent. i want them merged by morning.
 ```
 
-[Autopilot-stack](../../skills/keel/playbooks/autopilot-stack.md) runs the same owner loop but ships nothing. You wake up to one linear Graphite stack with a verifier's verdict on every link, and you review and land it yourself. Pick it over Autopilot-full when the changes are coupled, or when you want your own eyes on the work before anything merges:
+[Autopilot-stack](../../skills/keel/playbooks/autopilot-stack.md) runs the same leaf-owner build plus parent cleanup, but ships nothing. You wake up to one linear Graphite stack with a verifier's verdict on every link, and you review and land it yourself. Pick it over Autopilot-full when the changes are coupled, or when you want your own eyes on the work before anything merges:
 
 ```text
 /keel autopilot these five changes but stack them, don't ship. i'll land the stack in the morning.

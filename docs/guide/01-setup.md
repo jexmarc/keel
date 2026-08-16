@@ -18,7 +18,7 @@ Run:
 /setup-keel
 ```
 
-[`/setup-keel`](../../skills/setup-keel/SKILL.md) confirms `grok-4.6` and `grok-4.5`, shows you each role (code delegates, judgment, the review panels), and asks what you want. Answer the questions. It writes `~/.grok/keel.toml` or project `.grok/keel.toml`, plus a short rule next to it. It never writes Cursor rules.
+[`/setup-keel`](../../skills/setup-keel/SKILL.md) confirms `grok-4.6` and `grok-4.5`, shows you each role (code delegates, judgment, the review panels), and asks what you want. Answer the questions. It writes `~/.grok/keel.toml` or project `.grok/keel.toml`, plus a short rule next to it. It also writes `scripts_root` and installs `~/.grok/bin` wrappers (`keel-watch-pr`, `keel-orch`, `keel-worktree-audit`) so playbooks can find the plugin scripts after install. It never writes Cursor rules.
 
 You only override what you care about. A role with no key keeps the skill's default. To restore a default later, delete that key, or just run `/setup-keel` again.
 

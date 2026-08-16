@@ -26,6 +26,10 @@ The parent running `/keel` (or the main session that invoked a workflow skill) o
 
 Do not write playbooks that assume a child will spawn its own children. That is the pstack Cursor shape. It is wrong here.
 
+`/no-comments` must spawn Comment Sicko. The babysit loop stays in the parent. A leaf that opens a PR returns the URL and head SHA and stops. See `playbooks/opening-a-pr.md`.
+
+Harness tools (`watch-pr`, `orch`, `worktree-audit`) live in the plugin tree. Resolve them per `scripts.md`. Never run `scripts/...` from the user's project cwd.
+
 ## Who to spawn
 
 | Work | Type | Notes |
